@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+var connections []net.Conn
+
 func main() {
 	listener, err := net.Listen("tcp", ":8080")
 	if err != nil {
@@ -14,6 +16,8 @@ func main() {
 	}
 
 	fmt.Println("Servidor corriendo en puerto 8080")
+
+	connections = make([]net.Conn, 0)
 
 	for {
 		fmt.Println("Esperando conexion ...")
@@ -25,6 +29,8 @@ func main() {
 
 		fmt.Println("Conexion aceptada")
 
+		connections = append(connections, conn)
+
 		go handleConnection(conn)
 	}
 
@@ -32,6 +38,7 @@ func main() {
 
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
+	defer closeConnections()
 
 	for {
 		buff := make([]byte, 1024)
@@ -46,7 +53,21 @@ func handleConnection(conn net.Conn) {
 			break
 		}
 
+		sendAll(msg)
+
 		fmt.Println(msg)
 	}
 	fmt.Println("Conexion cerrada")
+}
+
+func sendAll(msg string) {
+	for _, conn := range connections {
+		conn.Write([]byte(msg))
+	}
+}
+
+func closeConnections() {
+	for _, conn := range connections {
+		conn.Close()
+	}
 }

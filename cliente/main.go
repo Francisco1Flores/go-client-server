@@ -25,6 +25,8 @@ func main() {
 
 	msg := ""
 
+	go waitMessages(conn, user)
+
 	for msg != ".exit" {
 		fmt.Print("-> ")
 		scanner.Scan()
@@ -38,4 +40,21 @@ func main() {
 		conn.Write([]byte(msg))
 	}
 	conn.Close()
+}
+
+func waitMessages(conn net.Conn, user string) {
+	defer conn.Close()
+	buff := make([]byte, 1024)
+	for {
+		large, err := conn.Read(buff)
+		if err != nil {
+			break
+		}
+
+		msg := string(buff[:large])
+
+		fmt.Println("<- " + msg)
+		fmt.Print("->")
+	}
+
 }
